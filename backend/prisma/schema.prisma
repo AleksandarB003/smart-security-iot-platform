@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Shared Schnorr group parameters (p, q, g), generated once at platform
+// setup. All devices use the same params; only their key pairs differ.
+// Singleton row: id always defaults to 1, so a second insert collides
+// on the primary key instead of silently creating a duplicate config.
+model ZkpParams {
+  id        Int      @id @default(1)
+  bits      Int
+  p         String
+  q         String
+  g         String
+  createdAt DateTime @default(now())
+}
+
+// Dashboard operator, authenticated with a normal password (bcrypt hash).
+// Separate from device authentication, which uses ZKP instead.
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+}
+
+model Device {
+  id           String          @id @default(uuid())
+  name         String
+  publicKey    String          @unique
+  status       DeviceStatus    @default(PENDING)
+  registeredAt DateTime        @default(now())
+  lastSeenAt   DateTime?
+  proofLogs    ProofLog[]
+  events       SecurityEvent[]
+}
+
+enum DeviceStatus {
+  PENDING // registered, never successfully authenticated
+  ACTIVE // at least one verified proof
+  REVOKED // manually disabled, authentication attempts are rejected
+}
+
+// Audit trail of every ZKP authentication attempt. The unique constraint
+// on `commitment` is the replay-protection mechanism: since each `prove()`
+// call produces a fresh commitment, a repeated commitment means someone
+// is resending a captured proof, and the insert is rejected.
+model ProofLog {
+  id         String   @id @default(uuid())
+  deviceId   String
+  device     Device   @relation(fields: [deviceId], references: [id])
+  commitment String   @unique
+  challenge  String
+  response   String
+  success    Boolean
+  createdAt  DateTime @default(now())
+
+  @@index([deviceId])
+}
+
+model SecurityEvent {
+  id        String   @id @default(uuid())
+  deviceId  String
+  device    Device   @relation(fields: [deviceId], references: [id])
+  type      String
+  payload   Json?
+  severity  Severity @default(INFO)
+  createdAt DateTime @default(now())
+
+  @@index([deviceId])
+  @@index([createdAt])
+}
+
+enum Severity {
+  INFO
+  WARNING
+  CRITICAL
+}
