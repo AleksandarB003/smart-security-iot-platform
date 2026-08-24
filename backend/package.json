@@ -12,7 +12,8 @@
     },
     "dependencies": {
         "schnorr-zkp-toolkit": "^0.1.0",
-        "@prisma/client": "^5.18.0"
+        "@prisma/client": "^5.18.0",
+        "express": "^4.19.0"
     },
     "devDependencies": {
         "typescript": "^5.5.0",
