@@ -1,15 +1,16 @@
 import express from "express";
 import { prisma } from "./db/prisma.js";
-import { zkpRouter } from "./modules/zkp/zkp.route.js";
+import { zkpRouter } from "./modules/zkp/zkp.routes.js";
 import { deviceRouter } from "./modules/devices/device.routes.js";
+import { authRouter } from "./modules/auth/auth.routes.js";
 
 export const app = express();
 
 app.use(express.json());
 
 app.use("/api/zkp", zkpRouter);
-
 app.use("/api/devices", deviceRouter);
+app.use("/api/devices", authRouter);
 
 app.get("/health", async (_req, res) => {
   try {
