@@ -31,14 +31,16 @@ model User {
 }
 
 model Device {
-  id           String          @id @default(uuid())
-  name         String
-  publicKey    String          @unique
-  status       DeviceStatus    @default(PENDING)
-  registeredAt DateTime        @default(now())
-  lastSeenAt   DateTime?
-  proofLogs    ProofLog[]
-  events       SecurityEvent[]
+  id               String          @id @default(uuid())
+  name             String
+  publicKey        String          @unique
+  status           DeviceStatus    @default(PENDING)
+  registeredAt     DateTime        @default(now())
+  lastSeenAt       DateTime?
+  sessionToken     String?         @unique
+  sessionExpiresAt DateTime?
+  proofLogs        ProofLog[]
+  events           SecurityEvent[]
 }
 
 enum DeviceStatus {

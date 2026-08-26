@@ -1,6 +1,10 @@
 import { Router } from "express";
 import type { Severity } from "@prisma/client";
 import {
+  resolveDeviceSession,
+  DeviceNotFoundError as SessionDeviceNotFoundError,
+} from "../auth/auth.service.js";
+import {
   recordEvent,
   listRecentEvents,
   listDeviceEvents,
@@ -13,6 +17,24 @@ const VALID_SEVERITIES = new Set(["INFO", "WARNING", "CRITICAL"]);
 export const eventRouter = Router();
 
 eventRouter.post("/:id/events", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
+  if (!token) {
+    return res.status(401).json({ error: "missing session token" });
+  }
+
+  try {
+    const device = await resolveDeviceSession(req.params.id, token);
+    if (!device) {
+      return res.status(401).json({ error: "invalid or expired session token" });
+    }
+  } catch (error) {
+    if (error instanceof SessionDeviceNotFoundError) {
+      return res.status(404).json({ error: "device not found" });
+    }
+    throw error;
+  }
+
   const { type, severity, payload } = req.body;
 
   if (typeof type !== "string" || type.trim() === "") {

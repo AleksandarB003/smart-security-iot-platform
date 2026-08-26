@@ -40,7 +40,9 @@ async function main() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(proofPayload),
   });
-  console.log("   Status:", authRes.status, "-", await authRes.json());
+  const authResult = await authRes.json();
+  console.log("   Status:", authRes.status, "-", authResult);
+  const sessionToken = authResult.sessionToken;
 
   console.log("\n6. Replaying the exact same proof (should be rejected)...");
   const replayRes = await fetch(`${BASE_URL}/api/devices/${device.id}/authenticate`, {
@@ -49,6 +51,25 @@ async function main() {
     body: JSON.stringify(proofPayload),
   });
   console.log("   Status:", replayRes.status, "-", await replayRes.json());
+
+  console.log("\n7. Sending an event WITHOUT a session token (should be rejected)...");
+  const noTokenRes = await fetch(`${BASE_URL}/api/devices/${device.id}/events`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type: "motion_detected" }),
+  });
+  console.log("   Status:", noTokenRes.status, "-", await noTokenRes.json());
+
+  console.log("\n8. Sending an event WITH the valid session token...");
+  const eventRes = await fetch(`${BASE_URL}/api/devices/${device.id}/events`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${sessionToken}`,
+    },
+    body: JSON.stringify({ type: "motion_detected", severity: "WARNING" }),
+  });
+  console.log("   Status:", eventRes.status, "-", await eventRes.json());
 }
 
 main().catch((error) => {

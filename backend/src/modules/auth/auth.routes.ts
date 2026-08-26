@@ -24,11 +24,15 @@ authRouter.post("/:id/authenticate", async (req, res) => {
   }
 
   try {
-    const success = await authenticateDevice(req.params.id, proofData as SerializedProof);
-    if (!success) {
+    const result = await authenticateDevice(req.params.id, proofData as SerializedProof);
+    if (!result.success) {
       return res.status(401).json({ success: false });
     }
-    res.json({ success: true });
+    res.json({
+      success: true,
+      sessionToken: result.sessionToken,
+      sessionExpiresAt: result.sessionExpiresAt,
+    });
   } catch (error) {
     if (error instanceof DeviceNotFoundError) {
       return res.status(404).json({ error: "device not found" });
