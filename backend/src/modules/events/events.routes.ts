@@ -10,7 +10,6 @@ import {
 
 const VALID_SEVERITIES = new Set(["INFO", "WARNING", "CRITICAL"]);
 
-// Mounted under /api/devices - handles /:id/events
 export const eventRouter = Router();
 
 eventRouter.post("/:id/events", async (req, res) => {
@@ -39,14 +38,13 @@ eventRouter.post("/:id/events", async (req, res) => {
 });
 
 eventRouter.get("/:id/events", async (req, res) => {
-  const limit = Number(req.query.limit) || 50;
+  const limit = Math.min(Number(req.query.limit) || 50, 200);
   res.json(await listDeviceEvents(req.params.id, limit));
 });
 
-// Mounted under /api/events - global recent-events feed, newest first
 export const globalEventsRouter = Router();
 
 globalEventsRouter.get("/", async (req, res) => {
-  const limit = Number(req.query.limit) || 50;
+  const limit = Math.min(Number(req.query.limit) || 50, 200);
   res.json(await listRecentEvents(limit));
 });

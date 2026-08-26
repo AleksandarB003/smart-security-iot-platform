@@ -4,6 +4,7 @@ import {
   DeviceNotFoundError,
   DeviceRevokedError,
   ReplayDetectedError,
+  InvalidProofFormatError,
   type SerializedProof,
 } from "./auth.service.js";
 
@@ -37,6 +38,9 @@ authRouter.post("/:id/authenticate", async (req, res) => {
     }
     if (error instanceof ReplayDetectedError) {
       return res.status(409).json({ error: "replay detected: proof already used" });
+    }
+    if (error instanceof InvalidProofFormatError) {
+      return res.status(400).json({ error: "proof fields must be valid numeric strings" });
     }
     throw error;
   }

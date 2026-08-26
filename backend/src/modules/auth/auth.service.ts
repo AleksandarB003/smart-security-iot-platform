@@ -14,11 +14,8 @@ export interface SerializedProof {
 export class DeviceNotFoundError extends Error {}
 export class DeviceRevokedError extends Error {}
 export class ReplayDetectedError extends Error {}
+export class InvalidProofFormatError extends Error {}
 
-// Verifies a device's ZKP proof and records the attempt. Returns true only
-// if the proof is cryptographically valid AND its public key matches the
-// one registered for this specific device (a valid proof for a different
-// key pair does not authenticate this device).
 export async function authenticateDevice(
   deviceId: string,
   proofData: SerializedProof,
@@ -27,13 +24,18 @@ export async function authenticateDevice(
   if (!device) throw new DeviceNotFoundError();
   if (device.status === "REVOKED") throw new DeviceRevokedError();
 
-  const proof = {
-    params: deserializeParams(proofData.params),
-    publicKey: BigInt(proofData.publicKey),
-    commitment: BigInt(proofData.commitment),
-    challenge: BigInt(proofData.challenge),
-    response: BigInt(proofData.response),
-  };
+  let proof;
+  try {
+    proof = {
+      params: deserializeParams(proofData.params),
+      publicKey: BigInt(proofData.publicKey),
+      commitment: BigInt(proofData.commitment),
+      challenge: BigInt(proofData.challenge),
+      response: BigInt(proofData.response),
+    };
+  } catch {
+    throw new InvalidProofFormatError();
+  }
 
   const publicKeyMatches = proofData.publicKey === device.publicKey;
   const cryptoValid = verify(proof);
