@@ -30,11 +30,22 @@ model User {
   createdAt    DateTime @default(now())
 }
 
+enum DeviceType {
+  MOTION
+  DOOR
+  SMOKE
+  CAMERA
+  GLASS_BREAK
+}
+
 model Device {
   id               String          @id @default(uuid())
   name             String
+  type             DeviceType
   publicKey        String          @unique
   status           DeviceStatus    @default(PENDING)
+  batteryLevel     Int             @default(100)
+  armed            Boolean         @default(true)
   registeredAt     DateTime        @default(now())
   lastSeenAt       DateTime?
   sessionToken     String?         @unique
