@@ -1,5 +1,6 @@
 import { prisma } from "../../db/prisma.js";
 import type { Severity } from "@prisma/client";
+import { broadcast } from "../../websocket.js";
 
 export class DeviceNotFoundError extends Error {}
 export class DeviceNotActiveError extends Error {}
@@ -14,9 +15,13 @@ export async function recordEvent(
   if (!device) throw new DeviceNotFoundError();
   if (device.status !== "ACTIVE") throw new DeviceNotActiveError();
 
-  return prisma.securityEvent.create({
+  const event = await prisma.securityEvent.create({
     data: { deviceId, type, severity, payload: payload as any },
   });
+
+  broadcast("event", { ...event, deviceName: device.name, deviceLocation: device.location });
+
+  return event;
 }
 
 export function listRecentEvents(limit: number) {

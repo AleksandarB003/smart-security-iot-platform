@@ -9,12 +9,14 @@
     "test": "vitest run",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "test:auth-flow": "tsx scripts/test-auth-flow.ts"
+    "test:auth-flow": "tsx scripts/test-auth-flow.ts",
+    "test:websocket": "tsx scripts/test-websocket.ts"
   },
   "dependencies": {
     "schnorr-zkp-toolkit": "^0.1.0",
     "@prisma/client": "^5.18.0",
-    "express": "^4.19.0"
+    "express": "^4.19.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "typescript": "^5.5.0",
@@ -22,6 +24,7 @@
     "vitest": "^2.0.0",
     "@types/node": "^22.0.0",
     "@types/express": "^4.17.0",
+    "@types/ws": "^8.5.0",
     "prisma": "^5.18.0"
   },
   "allowScripts": {

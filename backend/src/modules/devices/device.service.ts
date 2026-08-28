@@ -1,23 +1,28 @@
 import { prisma } from "../../db/prisma.js";
 import type { DeviceType } from "@prisma/client";
+import { broadcast } from "../../websocket.js";
 
-export function registerDevice(
+export async function registerDevice(
   name: string,
   publicKey: string,
   type: DeviceType,
   location: string,
   armed = true,
 ) {
-  return prisma.device.create({ data: { name, publicKey, type, location, armed } });
+  const device = await prisma.device.create({ data: { name, publicKey, type, location, armed } });
+  broadcast("device_registered", device);
+  return device;
 }
 
 export function listDevices() {
   return prisma.device.findMany({ orderBy: { registeredAt: "desc" } });
 }
 
-export function updateTelemetry(
+export async function updateTelemetry(
   deviceId: string,
   data: { batteryLevel?: number; armed?: boolean },
 ) {
-  return prisma.device.update({ where: { id: deviceId }, data });
+  const updated = await prisma.device.update({ where: { id: deviceId }, data });
+  broadcast("device_update", updated);
+  return updated;
 }

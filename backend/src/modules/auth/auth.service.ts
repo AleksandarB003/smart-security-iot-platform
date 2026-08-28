@@ -3,6 +3,7 @@ import { verify } from "schnorr-zkp-toolkit";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../db/prisma.js";
 import { deserializeParams, type SerializedParams } from "../zkp/serialization.js";
+import { broadcast } from "../../websocket.js";
 
 const SESSION_DURATION_MS = 60 * 60 * 1000;
 
@@ -74,10 +75,11 @@ export async function authenticateDevice(
   const sessionToken = randomBytes(32).toString("hex");
   const sessionExpiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
-  await prisma.device.update({
+  const updatedDevice = await prisma.device.update({
     where: { id: device.id },
     data: { status: "ACTIVE", lastSeenAt: new Date(), sessionToken, sessionExpiresAt },
   });
+  broadcast("device_update", updatedDevice);
 
   return { success: true, sessionToken, sessionExpiresAt };
 }
