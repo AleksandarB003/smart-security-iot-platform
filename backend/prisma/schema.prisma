@@ -42,6 +42,7 @@ model Device {
   id               String          @id @default(uuid())
   name             String
   type             DeviceType
+  location         String
   publicKey        String          @unique
   status           DeviceStatus    @default(PENDING)
   batteryLevel     Int             @default(100)

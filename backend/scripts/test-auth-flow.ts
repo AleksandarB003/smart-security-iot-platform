@@ -19,7 +19,12 @@ async function main() {
   const registerRes = await fetch(`${BASE_URL}/api/devices`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: "Simulated test device", publicKey, type: "MOTION" }),
+    body: JSON.stringify({
+      name: "Simulated test device",
+      publicKey,
+      type: "MOTION",
+      location: "Dnevna soba",
+    }),
   });
   const device = await registerRes.json();
   console.log("   OK -", device);

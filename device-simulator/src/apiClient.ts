@@ -11,6 +11,7 @@ export interface RegisteredDevice {
   id: string;
   name: string;
   type: string;
+  location: string;
   publicKey: string;
   status: string;
   batteryLevel: number;
@@ -21,12 +22,13 @@ export async function registerDevice(
   name: string,
   publicKey: string,
   type: string,
+  location: string,
   armed: boolean,
 ): Promise<RegisteredDevice> {
   const res = await fetch(`${BASE_URL}/api/devices`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, publicKey, type, armed }),
+    body: JSON.stringify({ name, publicKey, type, location, armed }),
   });
   if (!res.ok) {
     throw new Error(`Failed to register device: ${res.status} ${await res.text()}`);
@@ -57,6 +59,7 @@ export function sendEvent(
   token: string,
   type: string,
   severity: string,
+  payload?: Record<string, unknown>,
 ): Promise<Response> {
   return fetch(`${BASE_URL}/api/devices/${deviceId}/events`, {
     method: "POST",
@@ -64,7 +67,7 @@ export function sendEvent(
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ type, severity }),
+    body: JSON.stringify({ type, severity, payload }),
   });
 }
 

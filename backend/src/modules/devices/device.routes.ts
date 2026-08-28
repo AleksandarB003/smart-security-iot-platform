@@ -11,7 +11,7 @@ export const deviceRouter = Router();
 const VALID_TYPES = new Set(["MOTION", "DOOR", "SMOKE", "CAMERA", "GLASS_BREAK"]);
 
 deviceRouter.post("/", async (req, res) => {
-  const { name, publicKey, type, armed } = req.body;
+  const { name, publicKey, type, location, armed } = req.body;
 
   if (typeof name !== "string" || name.trim() === "") {
     return res.status(400).json({ error: "name is required" });
@@ -22,12 +22,16 @@ deviceRouter.post("/", async (req, res) => {
   if (typeof type !== "string" || !VALID_TYPES.has(type)) {
     return res.status(400).json({ error: `type must be one of: ${[...VALID_TYPES].join(", ")}` });
   }
+  if (typeof location !== "string" || location.trim() === "") {
+    return res.status(400).json({ error: "location is required" });
+  }
 
   try {
     const device = await registerDevice(
       name,
       publicKey,
       type as DeviceType,
+      location,
       typeof armed === "boolean" ? armed : true,
     );
     res.status(201).json(device);

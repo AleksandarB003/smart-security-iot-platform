@@ -1,8 +1,14 @@
 import { prisma } from "../../db/prisma.js";
 import type { DeviceType } from "@prisma/client";
 
-export function registerDevice(name: string, publicKey: string, type: DeviceType, armed = true) {
-  return prisma.device.create({ data: { name, publicKey, type, armed } });
+export function registerDevice(
+  name: string,
+  publicKey: string,
+  type: DeviceType,
+  location: string,
+  armed = true,
+) {
+  return prisma.device.create({ data: { name, publicKey, type, location, armed } });
 }
 
 export function listDevices() {

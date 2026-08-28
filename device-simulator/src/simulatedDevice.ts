@@ -9,6 +9,7 @@ import {
   type RegisteredDevice,
 } from "./apiClient.js";
 import { pickRandomDeviceType, pickWeightedEvent, type DeviceTypeConfig } from "./deviceTypes.js";
+import { pickRandomLocation } from "./locations.js";
 import {
   TICK_INTERVAL_MS,
   EVENT_PROBABILITY,
@@ -18,8 +19,6 @@ import {
   SESSION_REFRESH_MARGIN_MS,
 } from "./config.js";
 
-let deviceCounter = 0;
-
 export class SimulatedDevice {
   private typeConfig: DeviceTypeConfig;
   private keyPair!: KeyPair;
@@ -28,6 +27,7 @@ export class SimulatedDevice {
   private sessionExpiresAt = 0;
   private batteryLevel: number;
   private armed: boolean;
+  private location: string;
   private tickCount = 0;
   private label: string;
 
@@ -36,10 +36,10 @@ export class SimulatedDevice {
     private serializedParams: SerializedParams,
   ) {
     this.typeConfig = pickRandomDeviceType();
+    this.location = pickRandomLocation();
     this.batteryLevel = this.typeConfig.batteryPowered ? 70 + Math.random() * 30 : 100;
     this.armed = Math.random() > 0.15; // most devices start armed
-    deviceCounter += 1;
-    this.label = `${this.typeConfig.namePrefix} #${deviceCounter}`;
+    this.label = `${this.typeConfig.namePrefix} – ${this.location}`;
   }
 
   async start(): Promise<void> {
@@ -49,6 +49,7 @@ export class SimulatedDevice {
       this.label,
       this.keyPair.publicKey.toString(),
       this.typeConfig.type,
+      this.location,
       this.armed,
     );
     console.log(`[${this.label}] registered (id: ${this.device.id})`);
@@ -100,12 +101,17 @@ export class SimulatedDevice {
       });
     }
 
-    // A disarmed or dead-battery sensor can't detect anything.
     if (this.armed && this.batteryLevel > 0 && Math.random() < EVENT_PROBABILITY) {
       const event = pickWeightedEvent(this.typeConfig);
-      const res = await sendEvent(this.device.id, this.sessionToken, event.type, event.severity);
+      const res = await sendEvent(
+        this.device.id,
+        this.sessionToken,
+        event.type,
+        event.severity,
+        event.payload,
+      );
       if (res.ok) {
-        console.log(`[${this.label}] event: ${event.type} (${event.severity})`);
+        console.log(`[${this.label}] event: ${event.type} (${event.severity})`, event.payload);
       }
     }
   }
