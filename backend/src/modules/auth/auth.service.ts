@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../../db/prisma.js";
 import { deserializeParams, type SerializedParams } from "../zkp/serialization.js";
 import { broadcast } from "../../websocket.js";
+import { stripSecret } from "../devices/device.service.js";
 
 const SESSION_DURATION_MS = 60 * 60 * 1000;
 
@@ -79,7 +80,7 @@ export async function authenticateDevice(
     where: { id: device.id },
     data: { status: "ACTIVE", lastSeenAt: new Date(), sessionToken, sessionExpiresAt },
   });
-  broadcast("device_update", updatedDevice);
+  broadcast("device_update", stripSecret(updatedDevice));
 
   return { success: true, sessionToken, sessionExpiresAt };
 }
