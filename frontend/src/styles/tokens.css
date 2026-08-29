@@ -1,0 +1,33 @@
+:root {
+  /* Canvas & surfaces */
+  --color-canvas: #14161b;
+  --color-surface: #1c1f26;
+  --color-surface-elevated: #242832;
+  --color-border: #2c303a;
+
+  /* Text */
+  --color-text: #e8e6e1;
+  --color-text-muted: #878c97;
+
+  /* Semantic accents - used ONLY for status/severity, nowhere decorative */
+  --color-accent: #5b8ca6;
+  --color-warning: #d99a3d;
+  --color-critical: #c1443b;
+  --color-success: #5c9e6f;
+
+  /* Typography */
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "SF Mono", Consolas, monospace;
+
+  /* Radius - restrained, not neumorphic */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+}

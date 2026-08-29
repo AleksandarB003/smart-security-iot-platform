@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { prisma } from "./db/prisma.js";
 import { zkpRouter } from "./modules/zkp/zkp.routes.js";
 import { deviceRouter } from "./modules/devices/device.routes.js";
@@ -7,6 +8,7 @@ import { eventRouter, globalEventsRouter } from "./modules/events/events.routes.
 
 export const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 app.use("/api/zkp", zkpRouter);
