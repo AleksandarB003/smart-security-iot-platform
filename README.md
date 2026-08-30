@@ -53,7 +53,7 @@ smart-security-iot-platform/
     src/modules/auth/          ZKP verifikacija, session tokeni
     src/modules/events/        bezbednosni eventi
     src/websocket.ts           live broadcast
-    scripts/                   test skripte (ceo tok, websocket)
+    scripts/                   test i dev skripte
   device-simulator/
     src/deviceTypes.ts         5 tipova senzora, dinamicki eventi
     src/simulatedDevice.ts     zivotni ciklus jednog uredjaja
@@ -93,6 +93,16 @@ npm run dev
 ```
 Dashboard na `http://localhost:5173`.
 
+### Razvojne skripte (backend)
+
+| Skripta | Svrha |
+|---|---|
+| `npm run test:auth-flow` | End-to-end test ZKP toka (registracija, proof, autentifikacija, replay, eventi) |
+| `npm run test:websocket` | Povezuje se na `/ws` i ispisuje sve live broadcast poruke |
+| `npm run db:reset-devices` | Briše sve uređaje pre svežeg pokretanja simulatora |
+
+`db:reset-devices` je namerno **lokalna skripta**, ne REST endpoint. Operacija koja briše sve uređaje ne sme biti dostupna preko mreže bez autentifikacije, bez obzira koliko je zgodna za razvoj.
+
 ## API pregled
 
 | Endpoint | Opis |
@@ -109,7 +119,7 @@ Dashboard na `http://localhost:5173`.
 
 ## Bezbednosne mere
 
-Projekat je prošao interni security audit (5 kategorija: cost abuse, injection paths, DB access, auth, exposed secrets). Konkretne mere:
+Projekat je prošao interni security audit (5 kategorija: cost abuse, injection paths, DB access, auth, exposed secrets), i jedan naknadni pregled posle dodavanja WebSocket sloja i dashboard-a. Konkretne mere:
 
 - **Replay zaštita**: `commitment` iz svakog ZKP proof-a je jedinstven u bazi, ponovljen proof se odbija
 - **Session tokeni**: telemetrija i eventi zahtevaju token izdat pri autentifikaciji, ne samo poznavanje ID-ja uređaja
@@ -117,6 +127,8 @@ Projekat je prošao interni security audit (5 kategorija: cost abuse, injection 
 - **Rate/query limit**: `limit` parametar na listing endpoint-ima ograničen (max 200)
 - **`.env` nikad u git-u**: tajne (connection string) samo lokalno
 - **CORS eksplicitno konfigurisan**, ne otvoren nasumično
+- **Session token nikad ne napušta server osim u direktnom odgovoru na `/authenticate`**: naknadni pregled je otkrio da su `GET /api/devices` i WebSocket broadcast-i vraćali pun objekat uređaja, uključujući aktivan token. Ispravljeno tako da se token uklanja pre svakog izlaska iz servera, osim u tom jednom legitimnom slučaju.
+- **Brisanje uređaja nije izloženo preko mreže**: postoji samo kao lokalna razvojna skripta, ne kao API ruta
 
 ## Napomena
 

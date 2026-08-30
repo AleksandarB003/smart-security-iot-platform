@@ -68,7 +68,7 @@ enum DeviceStatus {
 model ProofLog {
   id         String   @id @default(uuid())
   deviceId   String
-  device     Device   @relation(fields: [deviceId], references: [id])
+  device     Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   commitment String   @unique
   challenge  String
   response   String
@@ -81,7 +81,7 @@ model ProofLog {
 model SecurityEvent {
   id        String   @id @default(uuid())
   deviceId  String
-  device    Device   @relation(fields: [deviceId], references: [id])
+  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   type      String
   payload   Json?
   severity  Severity @default(INFO)
