@@ -15,6 +15,13 @@ export interface Device {
   lastSeenAt: string | null;
 }
 
+export interface ProofLogEntry {
+  id: string;
+  commitment: string;
+  success: boolean;
+  createdAt: string;
+}
+
 export interface SecurityEvent {
   id: string;
   deviceId: string;

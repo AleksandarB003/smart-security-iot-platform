@@ -6,7 +6,7 @@ import { deserializeParams, type SerializedParams } from "../zkp/serialization.j
 import { broadcast } from "../../websocket.js";
 import { stripSecret } from "../devices/device.service.js";
 
-const SESSION_DURATION_MS = 60 * 60 * 1000;
+const SESSION_DURATION_MS = 60 * 60 * 1000; // 1 hour
 
 export interface SerializedProof {
   params: SerializedParams;
@@ -96,4 +96,13 @@ export async function resolveDeviceSession(deviceId: string, token: string) {
     return null;
   }
   return device;
+}
+
+export function listProofLogs(deviceId: string, limit: number) {
+  return prisma.proofLog.findMany({
+    where: { deviceId },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: { id: true, commitment: true, success: true, createdAt: true },
+  });
 }

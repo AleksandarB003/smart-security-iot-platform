@@ -1,12 +1,57 @@
-import { useCallback } from "react";
+import { useCallback, useMemo, useState, type CSSProperties } from "react";
 import { useDevices } from "./hooks/useDevices";
 import { useLiveFeed } from "./hooks/useLiveFeed";
 import { DeviceGrid } from "./components/DeviceGrid";
 import { EventFeed } from "./components/EventFeed";
-import type { Device } from "./types";
+import { SeverityFilter } from "./components/SeverityFilter";
+import { SortControl, type SortKey } from "./components/SortControl";
+import { LocationFilter } from "./components/LocationFilter";
+import { DeviceModal } from "./components/DeviceModal";
+import type { Device, Severity } from "./types";
+
+function sortDevices(devices: Device[], key: SortKey): Device[] {
+  const sorted = [...devices];
+  switch (key) {
+    case "location":
+      return sorted.sort((a, b) => a.location.localeCompare(b.location));
+    case "status":
+      return sorted.sort((a, b) => a.status.localeCompare(b.status));
+    case "battery":
+      return sorted.sort((a, b) => a.batteryLevel - b.batteryLevel);
+    case "type":
+      return sorted.sort((a, b) => a.type.localeCompare(b.type));
+    default:
+      return sorted;
+  }
+}
+
+function groupByLocation(devices: Device[]): [string, Device[]][] {
+  const map = new Map<string, Device[]>();
+  for (const device of devices) {
+    const list = map.get(device.location) ?? [];
+    list.push(device);
+    map.set(device.location, list);
+  }
+  return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+}
+
+const panelHeaderStyle: CSSProperties = {
+  fontSize: "0.8rem",
+  textTransform: "uppercase",
+  letterSpacing: "0.05em",
+  color: "var(--color-text-muted)",
+  margin: 0,
+};
 
 export default function App() {
   const { devices, setDevices, loading } = useDevices();
+  const [sortKey, setSortKey] = useState<SortKey>("location");
+  const [locationFilter, setLocationFilter] = useState("ALL");
+  const [grouped, setGrouped] = useState(false);
+  const [activeSeverities, setActiveSeverities] = useState<Set<Severity>>(
+    new Set(["INFO", "WARNING", "CRITICAL"]),
+  );
+  const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
 
   const handleDeviceUpdate = useCallback(
     (updated: Device) => {
@@ -22,6 +67,43 @@ export default function App() {
   );
 
   const { events, connected } = useLiveFeed(handleDeviceUpdate);
+
+  const uniqueLocations = useMemo(
+    () => [...new Set(devices.map((d) => d.location))].sort(),
+    [devices],
+  );
+
+  const locationFilteredDevices = useMemo(
+    () => (locationFilter === "ALL" ? devices : devices.filter((d) => d.location === locationFilter)),
+    [devices, locationFilter],
+  );
+
+  const sortedDevices = useMemo(
+    () => sortDevices(locationFilteredDevices, sortKey),
+    [locationFilteredDevices, sortKey],
+  );
+
+  const groupedDevices = useMemo(
+    () => (grouped ? groupByLocation(sortedDevices) : null),
+    [grouped, sortedDevices],
+  );
+
+  const filteredEvents = useMemo(
+    () => events.filter((event) => activeSeverities.has(event.severity)),
+    [events, activeSeverities],
+  );
+
+  const toggleSeverity = (severity: Severity) => {
+    setActiveSeverities((prev) => {
+      const next = new Set(prev);
+      if (next.has(severity)) {
+        next.delete(severity);
+      } else {
+        next.add(severity);
+      }
+      return next;
+    });
+  };
 
   return (
     <div style={{ padding: "var(--space-6)" }}>
@@ -55,23 +137,67 @@ export default function App() {
             overflowY: "auto",
           }}
         >
-          <h2
+          <div
             style={{
-              fontSize: "0.8rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              color: "var(--color-text-muted)",
-              margin: "0 0 var(--space-3) 0",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "var(--space-2)",
+              marginBottom: "var(--space-3)",
             }}
           >
-            Uređaji {devices.length > 0 && `(${devices.length})`}
-          </h2>
+            <h2 style={panelHeaderStyle}>Uređaji {devices.length > 0 && `(${devices.length})`}</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", flexWrap: "wrap" }}>
+              <LocationFilter
+                locations={uniqueLocations}
+                value={locationFilter}
+                onChange={setLocationFilter}
+              />
+              <SortControl value={sortKey} onChange={setSortKey} />
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "0.7rem",
+                  color: "var(--color-text-muted)",
+                  cursor: "pointer",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={grouped}
+                  onChange={(e) => setGrouped(e.target.checked)}
+                />
+                Grupiši
+              </label>
+            </div>
+          </div>
+
           {loading ? (
             <p style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-mono)" }}>
               Učitavanje...
             </p>
+          ) : groupedDevices ? (
+            groupedDevices.map(([location, group]) => (
+              <div key={location} style={{ marginBottom: "var(--space-4)" }}>
+                <h3
+                  style={{
+                    fontSize: "0.7rem",
+                    fontFamily: "var(--font-mono)",
+                    color: "var(--color-text-muted)",
+                    margin: "0 0 var(--space-2) 0",
+                  }}
+                >
+                  {location} ({group.length})
+                </h3>
+                <DeviceGrid devices={group} onDeviceClick={setSelectedDevice} />
+              </div>
+            ))
           ) : (
-            <DeviceGrid devices={devices} />
+            <DeviceGrid devices={sortedDevices} onDeviceClick={setSelectedDevice} />
           )}
         </section>
 
@@ -85,20 +211,24 @@ export default function App() {
             overflowY: "auto",
           }}
         >
-          <h2
+          <div
             style={{
-              fontSize: "0.8rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              color: "var(--color-text-muted)",
-              margin: "0 0 var(--space-3) 0",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "var(--space-3)",
             }}
           >
-            Live feed
-          </h2>
-          <EventFeed events={events} connected={connected} />
+            <h2 style={panelHeaderStyle}>Live feed</h2>
+            <SeverityFilter active={activeSeverities} onToggle={toggleSeverity} />
+          </div>
+          <EventFeed events={filteredEvents} connected={connected} />
         </section>
       </div>
+
+      {selectedDevice && (
+        <DeviceModal device={selectedDevice} onClose={() => setSelectedDevice(null)} />
+      )}
     </div>
   );
 }

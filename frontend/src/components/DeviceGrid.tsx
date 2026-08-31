@@ -1,7 +1,13 @@
 import type { Device } from "../types";
 import { DeviceCard } from "./DeviceCard";
 
-export function DeviceGrid({ devices }: { devices: Device[] }) {
+export function DeviceGrid({
+  devices,
+  onDeviceClick,
+}: {
+  devices: Device[];
+  onDeviceClick?: (device: Device) => void;
+}) {
   if (devices.length === 0) {
     return (
       <p style={{ color: "var(--color-text-muted)", fontFamily: "var(--font-mono)" }}>
@@ -19,7 +25,11 @@ export function DeviceGrid({ devices }: { devices: Device[] }) {
       }}
     >
       {devices.map((device) => (
-        <DeviceCard key={device.id} device={device} />
+        <DeviceCard
+          key={device.id}
+          device={device}
+          onClick={onDeviceClick ? () => onDeviceClick(device) : undefined}
+        />
       ))}
     </div>
   );

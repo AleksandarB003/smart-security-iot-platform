@@ -5,6 +5,7 @@ import {
   DeviceRevokedError,
   ReplayDetectedError,
   InvalidProofFormatError,
+  listProofLogs,
   type SerializedProof,
 } from "./auth.service.js";
 
@@ -48,4 +49,9 @@ authRouter.post("/:id/authenticate", async (req, res) => {
     }
     throw error;
   }
+});
+
+authRouter.get("/:id/proof-logs", async (req, res) => {
+  const limit = Math.min(Number(req.query.limit) || 20, 100);
+  res.json(await listProofLogs(req.params.id, limit));
 });

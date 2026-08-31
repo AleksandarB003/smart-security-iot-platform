@@ -11,11 +11,12 @@ const TYPE_ICONS = {
   GLASS_BREAK: ShieldAlert,
 };
 
-export function DeviceCard({ device }: { device: Device }) {
+export function DeviceCard({ device, onClick }: { device: Device; onClick?: () => void }) {
   const Icon = TYPE_ICONS[device.type];
 
   return (
     <div
+      onClick={onClick}
       style={{
         background: "var(--color-surface-elevated)",
         border: "1px solid var(--color-border)",
@@ -24,6 +25,7 @@ export function DeviceCard({ device }: { device: Device }) {
         display: "flex",
         flexDirection: "column",
         gap: "var(--space-2)",
+        cursor: onClick ? "pointer" : "default",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
