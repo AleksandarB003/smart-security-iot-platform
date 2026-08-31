@@ -12,7 +12,12 @@ Platforma se sastoji iz tri nezavisna paketa koji komuniciraju preko REST API-ja
 
 **Device Simulator** je nezavisan Node.js proces koji pokreće nasumičan broj (5-15) simuliranih IoT senzora. Svaki uređaj generiše sopstveni ZKP ključni par, registruje se, autentifikuje se, i periodično šalje telemetriju i bezbednosne evente ka backend-u.
 
-**Dashboard** (React) povlači listu uređaja preko REST-a i prati live feed događaja preko WebSocket konekcije, bez potrebe za ručnim osvežavanjem.
+**Dashboard** (React) povlači listu uređaja preko REST-a i prati live feed događaja preko WebSocket konekcije, bez potrebe za ručnim osvežavanjem. Podržava:
+
+- filter po lokaciji i grupisanje uređaja po sobi
+- sortiranje po lokaciji, statusu, bateriji ili tipu
+- filter feed-a po ozbiljnosti (INFO/WARNING/CRITICAL)
+- klik na uređaj otvara detalje: pun status, istorija ZKP pokušaja, poslednji eventi
 
 - **Backend**: REST API, ZKP verifikacija, WebSocket broadcast, baza podataka
 - **Device Simulator**: nezavisan proces koji pokreće nasumičan broj (5-15) simuliranih senzora, svaki sa svojim ZKP ključnim parom
@@ -112,6 +117,7 @@ Dashboard na `http://localhost:5173`.
 | `GET /api/devices` | Lista svih uređaja |
 | `PATCH /api/devices/:id/telemetry` | Ažuriranje baterije/armed statusa (traži session token) |
 | `POST /api/devices/:id/authenticate` | ZKP autentifikacija, vraća session token |
+| `GET /api/devices/:id/proof-logs` | Istorija ZKP pokušaja autentifikacije za uređaj |
 | `POST /api/devices/:id/events` | Zabeleži bezbednosni event (traži session token) |
 | `GET /api/events` | Globalni feed poslednjih eventa |
 | `GET /health` | Provera da je server i baza dostupna |
